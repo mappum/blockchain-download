@@ -1,0 +1,20 @@
+{
+  "name": "blockchain-download",
+  "version": "0.0.0",
+  "description": "Streams for downloading blockchain data from peers",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "webcoin",
+    "blockchain",
+    "download",
+    "spv",
+    "headers",
+    "bitcoin",
+    "stream"
+  ],
+  "author": "Matt Bell <mappum@gmail.com>",
+  "license": "MIT"
+}
