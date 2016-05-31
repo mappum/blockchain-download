@@ -1,6 +1,6 @@
 var Transform = require('stream').Transform
 var util = require('util')
-var debug = require('debug')('bitcoin-net:headerstream')
+var debug = require('debug')('blockchain-download:headerstream')
 var INV = require('bitcoin-protocol').constants.inventory
 
 var HeaderStream = module.exports = function (peers, opts) {

@@ -1,7 +1,7 @@
 var Transform = require('stream').Transform
 var util = require('util')
 var merkleProof = require('bitcoin-merkle-proof')
-var debug = require('debug')('bitcoin-net:blockstream')
+var debug = require('debug')('blockchain-download:blockstream')
 var wrapEvents = require('event-cleanup')
 var assign = require('object-assign')
 
