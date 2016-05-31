@@ -16,5 +16,13 @@
     "stream"
   ],
   "author": "Matt Bell <mappum@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "bitcoin-merkle-proof": "0.0.6",
+    "bitcoin-protocol": "^3.0.1",
+    "debug": "^2.2.0",
+    "event-cleanup": "^1.0.3",
+    "object-assign": "^4.1.0",
+    "through2": "^2.0.1"
+  }
 }
