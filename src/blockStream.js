@@ -1,5 +1,6 @@
 var Transform = require('stream').Transform
 var util = require('util')
+var Inventory = require('bitcoin-inventory')
 var merkleProof = require('bitcoin-merkle-proof')
 var debug = require('debug')('blockchain-download:blockstream')
 var wrapEvents = require('event-cleanup')
@@ -17,6 +18,11 @@ var BlockStream = module.exports = function (peers, opts) {
   this.batchSize = opts.batchSize || 64
   this.filtered = opts.filtered
   this.timeout = opts.timeout || 2 * 1000
+  this.inventory = opts.inventory
+  if (!this.inventory) {
+    this.inventory = Inventory(peers, { ttl: 10 * 1000 })
+    this.createdInventory = true
+  }
 
   this.batch = []
   this.buffer = []
@@ -65,7 +71,6 @@ BlockStream.prototype._sendBatch = function (cb) {
     var onBlock = this.filtered ? this._onMerkleBlock : this._onBlock
     blocks.forEach((block, i) => {
       block = assign({}, batch[i], block)
-      if (batch[i].operation) block.operation = batch[i].operation
       onBlock.call(this, block, peer)
     })
     cb(null)
@@ -92,7 +97,7 @@ BlockStream.prototype._onMerkleBlock = function (block, peer) {
   var transactions = []
   var remaining = txids.length
 
-  var timeout = peer._getTimeout()
+  var timeout = peer.latency * 6 + 2000
   var txTimeout = setTimeout(() => {
     this.peers.getTransactions(txids, (err, transactions) => {
       if (err) return this.emit('error', err)
@@ -100,14 +105,14 @@ BlockStream.prototype._onMerkleBlock = function (block, peer) {
     })
   }, timeout)
 
-  var events = wrapEvents(this.peers)
+  var events = wrapEvents(this.inventory)
   txids.forEach((txid, i) => {
-    var hash = txid.toString('base64')
-    var tx = this.peers._txPoolMap[hash]
+    var tx = this.inventory.get(txid)
     if (tx) {
       maybeDone(tx, i)
       return
     }
+    var hash = txid.toString('base64')
     events.once(`tx:${hash}`, (tx) => maybeDone(tx, i))
   })
 
@@ -138,4 +143,5 @@ BlockStream.prototype._push = function (block) {
 BlockStream.prototype.end = function () {
   this.ended = true
   this.push(null)
+  if (this.createdInventory) this.inventory.close()
 }

@@ -23,6 +23,7 @@
   "author": "Matt Bell <mappum@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "bitcoin-inventory": "^1.0.2",
     "bitcoin-merkle-proof": "0.0.6",
     "bitcoin-protocol": "^3.0.1",
     "debug": "^2.2.0",
