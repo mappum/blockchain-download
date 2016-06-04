@@ -129,7 +129,7 @@ test('mock tests', function (t) {
         t.equal(block.transactions.length, 1, 'transactions array has 1 element')
         t.equal(block.transactions[0], tx, 'correct transaction')
         var elapsed = Date.now() - start
-        t.ok(Math.abs(elapsed - 500) < 50, 'data emitted on timeout')
+        t.ok(Math.abs(elapsed - 750) < 50, 'data emitted on tx timeout')
         t.end()
       })
       var start = Date.now()
@@ -142,7 +142,7 @@ test('mock tests', function (t) {
       bs.write(block)
       setTimeout(function () {
         peer.emit('tx', tx)
-      }, 500)
+      }, 750)
     })
 
     t.test('merkleblock after "tx" message', function (t) {
