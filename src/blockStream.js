@@ -25,8 +25,6 @@ var BlockStream = module.exports = function (peers, opts) {
   }
 
   this.batch = []
-  this.buffer = []
-  this.height = null
   this.ended = false
 
   this.batchTimeout = null
@@ -39,10 +37,6 @@ BlockStream.prototype._error = function (err) {
 
 BlockStream.prototype._transform = function (block, enc, cb) {
   if (this.ended) return
-
-  if (this.height == null) {
-    this.height = block.height
-  }
 
   // buffer block hashes until we have `batchSize`, then make a `getdata`
   // request with all of them once the batch fills up, or if we don't receive
@@ -79,7 +73,7 @@ BlockStream.prototype._sendBatch = function (cb) {
 
 BlockStream.prototype._onBlock = function (block) {
   if (this.ended) return
-  this._push(block)
+  this.push(block)
 }
 
 BlockStream.prototype._onMerkleBlock = function (block, peer) {
@@ -126,17 +120,7 @@ BlockStream.prototype._onMerkleBlock = function (block, peer) {
     clearTimeout(txTimeout)
     if (events) events.removeAll()
     block.transactions = transactions
-    self._push(block)
-  }
-}
-
-BlockStream.prototype._push = function (block) {
-  var offset = block.height - this.height
-  this.buffer[offset] = block
-  if (!this.buffer[0]) debug(`buffering block, height=${block.height}, buffer.length=${this.buffer.length}`)
-  while (this.buffer[0]) {
-    this.push(this.buffer.shift())
-    this.height++
+    self.push(block)
   }
 }
 

@@ -39,7 +39,8 @@ test('mock tests', function (t) {
 
     var _block = createBlock()
     function block () {
-      return _block = createBlock(_block)
+      _block = createBlock(_block)
+      return _block
     }
 
     t.test('incomplete batch', function (t) {
@@ -87,31 +88,6 @@ test('mock tests', function (t) {
       var b = block()
       b.add = true
       bs.write(b)
-    })
-
-    t.test('blocks sent out of order', function (t) {
-      var expectedHeight = 13
-      bs.once('data', function (block) {
-        t.equal(block.height, expectedHeight++, 'correct height')
-        if (block.height === 15) t.end()
-      })
-
-      setImmediate(function () {
-        peer.delay = 200
-        bs.write(block())
-      })
-      setImmediate(function () {
-        peer.delay = 100
-        bs.write(block())
-      })
-      setImmediate(function () {
-        peer.delay = 150
-        bs.write(block())
-      })
-      setImmediate(function () {
-        peer.delay = 50
-        bs.write(block())
-      })
     })
 
     t.end()
