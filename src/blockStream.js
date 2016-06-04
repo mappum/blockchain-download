@@ -25,9 +25,8 @@ var BlockStream = module.exports = function (peers, opts) {
   }
 
   this.batch = []
-  this.ended = false
-
   this.batchTimeout = null
+  this.fetching = 0
 }
 util.inherits(BlockStream, Transform)
 
@@ -36,12 +35,11 @@ BlockStream.prototype._error = function (err) {
 }
 
 BlockStream.prototype._transform = function (block, enc, cb) {
-  if (this.ended) return
-
   // buffer block hashes until we have `batchSize`, then make a `getdata`
   // request with all of them once the batch fills up, or if we don't receive
   // any headers for a certain amount of time (`timeout` option)
   this.batch.push(block)
+  this.fetching++
   if (this.batchTimeout) clearTimeout(this.batchTimeout)
   if (this.batch.length >= this.batchSize) {
     this._sendBatch(cb)
@@ -55,8 +53,21 @@ BlockStream.prototype._transform = function (block, enc, cb) {
   }
 }
 
+BlockStream.prototype._flush = function (cb) {
+  if (this.fetching === 0 && !this.batchTimeout) return cb(null)
+  if (this.batchTimeout) {
+    clearTimeout(this.batchTimeout)
+    this.batchTimeout = null
+    this._sendBatch((err) => {
+      if (err) this._error(err)
+    })
+  }
+  this.on('data', () => {
+    if (this.fetching === 0) cb(null)
+  })
+}
+
 BlockStream.prototype._sendBatch = function (cb) {
-  if (this.ended) return
   var batch = this.batch
   this.batch = []
   var hashes = batch.map((block) => block.header.getHash())
@@ -72,12 +83,10 @@ BlockStream.prototype._sendBatch = function (cb) {
 }
 
 BlockStream.prototype._onBlock = function (block) {
-  if (this.ended) return
-  this.push(block)
+  this._push(block)
 }
 
 BlockStream.prototype._onMerkleBlock = function (block, peer) {
-  if (this.ended) return
   var self = this
 
   var txids = merkleProof.verify({
@@ -120,12 +129,18 @@ BlockStream.prototype._onMerkleBlock = function (block, peer) {
     clearTimeout(txTimeout)
     if (events) events.removeAll()
     block.transactions = transactions
-    self.push(block)
+    self._push(block)
   }
 }
 
+BlockStream.prototype._push = function (block) {
+  this.fetching--
+  this.push(block)
+}
+
 BlockStream.prototype.end = function () {
-  this.ended = true
-  this.push(null)
-  if (this.createdInventory) this.inventory.close()
+  Transform.prototype.end.call(this)
+  if (this.createdInventory) {
+    this.once('finish', () => this.inventory.close())
+  }
 }
