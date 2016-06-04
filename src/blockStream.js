@@ -31,7 +31,7 @@ var BlockStream = module.exports = function (peers, opts) {
 util.inherits(BlockStream, Transform)
 
 BlockStream.prototype._error = function (err) {
-  this.emit('error', err)
+  if (err) this.emit('error', err)
 }
 
 BlockStream.prototype._transform = function (block, enc, cb) {
@@ -45,9 +45,7 @@ BlockStream.prototype._transform = function (block, enc, cb) {
     this._sendBatch(cb)
   } else {
     this.batchTimeout = setTimeout(() => {
-      this._sendBatch((err) => {
-        if (err) this._error(err)
-      })
+      this._sendBatch(this._error.bind(this))
     }, this.timeout)
     cb(null)
   }
@@ -58,9 +56,7 @@ BlockStream.prototype._flush = function (cb) {
   if (this.batchTimeout) {
     clearTimeout(this.batchTimeout)
     this.batchTimeout = null
-    this._sendBatch((err) => {
-      if (err) this._error(err)
-    })
+    this._sendBatch(this._error.bind(this))
   }
   this.on('data', () => {
     if (this.fetching === 0) cb(null)
@@ -103,7 +99,7 @@ BlockStream.prototype._onMerkleBlock = function (block, peer) {
   var timeout = peer.latency * 6 + 2000
   var txTimeout = setTimeout(() => {
     this.peers.getTransactions(txids, (err, transactions) => {
-      if (err) return this.emit('error', err)
+      if (err) return this._error(err)
       done(transactions)
     })
   }, timeout)
