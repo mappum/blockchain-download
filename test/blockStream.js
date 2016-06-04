@@ -1,10 +1,10 @@
-var pseudoRandomBytes = require('crypto').pseudoRandomBytes
-var EventEmitter = require('events')
-var inherits = require('util').inherits
 var Block = require('bitcoinjs-lib').Block
 var u = require('bitcoin-util')
 var test = require('tape')
 var BlockStream = require('../').BlockStream
+var createBlock = require('./common.js').createBlock
+var createTx = require('./common.js').createTx
+var MockPeer = require('./common.js').MockPeer
 require('setimmediate')
 
 test('create BlockStream', function (t) {
@@ -231,41 +231,20 @@ test('flush', function (t) {
   bs.end()
 })
 
-function MockPeer () {
-  EventEmitter.call(this)
-  this.latency = 0
-}
-inherits(MockPeer, EventEmitter)
-MockPeer.prototype.send = function (command, payload) {
-  this.emit('send:' + command, payload)
-}
-MockPeer.prototype.getBlocks = function (hashes, opts, cb) {
-  var self = this
-  setImmediate(function () {
-    cb(null, hashes.map(function (hash) {
-      return { transactions: [] }
-    }), self)
-  })
-}
-MockPeer.prototype.getTransactions = function (hashes, cb) {
-  this.emit('getTransactions', hashes, cb)
-}
-
-function createBlock (prev) {
-  var header = new Block()
-  header.version = 2
-  header.merkleRoot = u.nullHash
-  header.timestamp = Math.floor(Date.now() / 1000)
-  header.bits = 0xff000000
-  header.nonce = Math.floor(Math.random() * 0xffffffff)
-  header.prevHash = prev ? prev.header.getHash() : u.nullHash
-  return {
-    height: prev ? prev.height + 1 : 0,
-    header: header
+test('errors', function (t) {
+  var peer = new MockPeer()
+  peer.getBlocks = function (hashes, opts, cb) {
+    cb(new Error('test error'))
   }
-}
-
-function createTx (hash) {
-  hash = hash || pseudoRandomBytes(32)
-  return { getHash: function () { return hash } }
-}
+  var bs = new BlockStream(peer)
+  bs.once('data', function (block) {
+    t.fail('should not have emitted data')
+  })
+  bs.once('error', function (err) {
+    t.ok(err, 'emitted "error" event')
+    t.equal(err.message, 'test error')
+    t.end()
+  })
+  bs.write(createBlock())
+  bs.end()
+})
