@@ -4,7 +4,12 @@ var debug = require('debug')('blockchain-download:headerstream')
 var INV = require('bitcoin-protocol').constants.inventory
 
 var HeaderStream = module.exports = function (peers, opts) {
-  if (!peers) throw new Error('"peers" argument is required')
+  if (!peers) {
+    throw new Error('"peers" argument is required for HeaderStream')
+  }
+  if (!(this instanceof HeaderStream)) {
+    return new HeaderStream(peers, opts)
+  }
   Transform.call(this, { objectMode: true })
   opts = opts || {}
   this.peers = peers
