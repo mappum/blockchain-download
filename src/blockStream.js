@@ -106,7 +106,7 @@ BlockStream.prototype._onMerkleBlock = function (block, peer) {
       maybeDone(tx, i)
       return
     }
-    var hash = txid.toString('base64')
+    var hash = txid.toString('hex')
     events.once(`tx:${hash}`, (tx) => maybeDone(tx, i))
   })
 
