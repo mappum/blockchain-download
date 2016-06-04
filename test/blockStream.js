@@ -206,6 +206,31 @@ test('mock tests', function (t) {
   t.end()
 })
 
+test('end', function (t) {
+  var peer = new MockPeer()
+  var bs = new BlockStream(peer)
+  bs.on('finish', function () {
+    t.pass('"finish" event emitted')
+    t.end()
+  })
+  bs.on('end', function () {
+    t.fail('"end" event emitted')
+  })
+  bs.end()
+})
+
+test('flush', function (t) {
+  var peer = new MockPeer()
+  var bs = new BlockStream(peer)
+  bs.once('data', function (block) {
+    t.ok(block, 'got block')
+    t.equal(block.height, 0, 'correct height')
+    t.end()
+  })
+  bs.write(createBlock())
+  bs.end()
+})
+
 function MockPeer () {
   EventEmitter.call(this)
   this.latency = 0
