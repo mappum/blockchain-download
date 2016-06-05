@@ -7,6 +7,8 @@ var createTx = require('./common.js').createTx
 var MockPeer = require('./common.js').MockPeer
 require('setimmediate')
 
+var TIME_EPSILON = 100
+
 test('create BlockStream', function (t) {
   t.test('normal constructor', function (t) {
     var bs = new BlockStream(new MockPeer())
@@ -51,7 +53,7 @@ test('mock tests', function (t) {
         t.ok(Array.isArray(block.transactions), 'has transactions array')
         t.equal(block.transactions.length, 0, 'transactions array is empty')
         var elapsed = Date.now() - start
-        t.ok(Math.abs(elapsed - 500) < 50, 'data emitted on timeout')
+        t.ok(Math.abs(elapsed - 500) < TIME_EPSILON, 'data emitted on timeout')
         t.end()
       })
       var start = Date.now()
@@ -107,7 +109,7 @@ test('mock tests', function (t) {
         t.ok(Array.isArray(block.transactions), 'has transactions array')
         t.equal(block.transactions.length, 0, 'transactions array is empty')
         var elapsed = Date.now() - start
-        t.ok(Math.abs(elapsed - 500) < 50, 'data emitted on timeout')
+        t.ok(Math.abs(elapsed - 500) < TIME_EPSILON, 'data emitted on timeout')
         t.end()
       })
       var start = Date.now()
@@ -129,7 +131,7 @@ test('mock tests', function (t) {
         t.equal(block.transactions.length, 1, 'transactions array has 1 element')
         t.equal(block.transactions[0], tx, 'correct transaction')
         var elapsed = Date.now() - start
-        t.ok(Math.abs(elapsed - 750) < 50, 'data emitted on tx timeout')
+        t.ok(Math.abs(elapsed - 750) < TIME_EPSILON, 'data emitted on tx timeout')
         t.end()
       })
       var start = Date.now()
@@ -156,7 +158,7 @@ test('mock tests', function (t) {
         t.equal(block.transactions.length, 1, 'transactions array has 1 element')
         t.equal(block.transactions[0], tx, 'correct transaction')
         var elapsed = Date.now() - start
-        t.ok(Math.abs(elapsed - 500) < 50, 'data emitted on timeout')
+        t.ok(Math.abs(elapsed - 500) < TIME_EPSILON, 'data emitted on timeout')
         t.end()
       })
       var start = Date.now()
