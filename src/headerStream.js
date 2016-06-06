@@ -27,7 +27,6 @@ util.inherits(HeaderStream, Transform)
 
 HeaderStream.prototype._error = function (err) {
   this.emit('error', err)
-  this.end()
 }
 
 HeaderStream.prototype._transform = function (locator, enc, cb) {
@@ -40,8 +39,9 @@ HeaderStream.prototype._getHeaders = function (locator, peer, cb) {
   if (this.getting || this.done) return
   if (typeof peer === 'function') {
     cb = peer
-    peer = this.peers
+    peer = null
   }
+  if (!peer) peer = this.peers
   this.getting = true
   peer.getHeaders(locator, {
     stop: this.stop,
@@ -73,7 +73,7 @@ HeaderStream.prototype._getHeaders = function (locator, peer, cb) {
 HeaderStream.prototype.end = function () {
   if (this.done) return
   this.done = true
-  this.push(null)
+  Transform.prototype.end.call(this)
 }
 
 HeaderStream.prototype._onTip = function (peer) {
@@ -85,15 +85,15 @@ HeaderStream.prototype._onTip = function (peer) {
 }
 
 HeaderStream.prototype._subscribeToInvs = function () {
-  var hashes = []
+  var lastSeen = []
   this.peers.on('inv', (inv, peer) => {
     for (let item of inv) {
       if (item.type !== INV.MSG_BLOCK) continue
-      for (let hash of hashes) {
+      for (let hash of lastSeen) {
         if (hash.equals(item.hash)) return
       }
-      hashes.push(item.hash)
-      if (hashes.length > 8) hashes.shift()
+      lastSeen.push(item.hash)
+      if (lastSeen.length > 8) lastSeen.shift()
       this._getHeaders(this.lastLocator, peer)
     }
   })
