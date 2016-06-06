@@ -17,7 +17,7 @@ var BlockStream = module.exports = function (peers, opts) {
   this.peers = peers
   this.batchSize = opts.batchSize || 64
   this.filtered = opts.filtered
-  this.timeout = opts.timeout || 2 * 1000
+  this.batchTimeout = opts.batchTimeout || 2 * 1000
   this.inventory = opts.inventory
   if (!this.inventory) {
     this.inventory = Inventory(peers, { ttl: 10 * 1000 })
@@ -25,7 +25,7 @@ var BlockStream = module.exports = function (peers, opts) {
   }
 
   this.batch = []
-  this.batchTimeout = null
+  this._batchTimeout = null
   this.fetching = 0
 }
 util.inherits(BlockStream, Transform)
@@ -37,25 +37,25 @@ BlockStream.prototype._error = function (err) {
 BlockStream.prototype._transform = function (block, enc, cb) {
   // buffer block hashes until we have `batchSize`, then make a `getdata`
   // request with all of them once the batch fills up, or if we don't receive
-  // any headers for a certain amount of time (`timeout` option)
+  // any headers for a certain amount of time (`batchTimeout` option)
   this.batch.push(block)
   this.fetching++
-  if (this.batchTimeout) clearTimeout(this.batchTimeout)
+  if (this._batchTimeout) clearTimeout(this._batchTimeout)
   if (this.batch.length >= this.batchSize) {
     this._sendBatch(cb)
   } else {
-    this.batchTimeout = setTimeout(() => {
+    this._batchTimeout = setTimeout(() => {
       this._sendBatch(this._error.bind(this))
-    }, this.timeout)
+    }, this.batchTimeout)
     cb(null)
   }
 }
 
 BlockStream.prototype._flush = function (cb) {
-  if (this.fetching === 0 && !this.batchTimeout) return cb(null)
-  if (this.batchTimeout) {
-    clearTimeout(this.batchTimeout)
-    this.batchTimeout = null
+  if (this.fetching === 0 && !this._batchTimeout) return cb(null)
+  if (this._batchTimeout) {
+    clearTimeout(this._batchTimeout)
+    this._batchTimeout = null
     this._sendBatch(this._error.bind(this))
   }
   this.on('data', () => {
@@ -67,7 +67,10 @@ BlockStream.prototype._sendBatch = function (cb) {
   var batch = this.batch
   this.batch = []
   var hashes = batch.map((block) => block.header.getHash())
-  this.peers.getBlocks(hashes, { filtered: this.filtered }, (err, blocks, peer) => {
+  this.peers.getBlocks(hashes, {
+    filtered: this.filtered,
+    timeout: this.timeout
+  }, (err, blocks, peer) => {
     if (err) return cb(err)
     var onBlock = this.filtered ? this._onMerkleBlock : this._onBlock
     blocks.forEach((block, i) => {

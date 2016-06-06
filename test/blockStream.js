@@ -35,7 +35,7 @@ test('create BlockStream', function (t) {
 test('mock tests', function (t) {
   t.test('simple BlockStream', function (t) {
     var peer = new MockPeer()
-    var bs = new BlockStream(peer, { batchSize: 10, timeout: 500 })
+    var bs = new BlockStream(peer, { batchSize: 10, batchTimeout: 500 })
     var res = bs.read()
     t.notOk(res, 'nothing to pull from stream')
 
@@ -96,7 +96,7 @@ test('mock tests', function (t) {
   })
   t.test('filtered BlockStream', function (t) {
     var peer = new MockPeer()
-    var bs = new BlockStream(peer, { batchSize: 10, timeout: 500, filtered: true })
+    var bs = new BlockStream(peer, { batchSize: 10, batchTimeout: 500, filtered: true })
     var res = bs.read()
     t.notOk(res, 'nothing to pull from stream')
 
