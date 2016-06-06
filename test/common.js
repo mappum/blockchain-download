@@ -24,6 +24,9 @@ MockPeer.prototype.getBlocks = function (hashes, opts, cb) {
 MockPeer.prototype.getTransactions = function (hashes, cb) {
   this.emit('getTransactions', hashes, cb)
 }
+MockPeer.prototype.getHeaders = function (locator, opts, cb) {
+  this.emit('getHeaders', locator, opts, cb)
+}
 
 exports.createBlock = function (prev) {
   var header = new Block()
