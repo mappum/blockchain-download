@@ -80,7 +80,7 @@ In this example, we first call `chain.createReadStream()` which will output the 
 
 `BlockStream` is a `Transform` stream.
 
-The stream **input** should be block objects which return a `Buffer` hash at `block.headdr.getHash()`.
+The stream **input** should be block objects which have a `header` property, which is a [BitcoinJS](https://github.com/bitcoinjs/bitcoinjs-lib) `Block`.
 
 The **output** will be objects containing the following properties (in addition to the properties of the input objects):
 
