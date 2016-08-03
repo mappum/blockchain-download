@@ -22,13 +22,16 @@ Example sync:
 var PeerGroup = require('bitcoin-net').PeerGroup
 var HeaderStream = require('blockchain-download').HeaderStream
 var Blockchain = require('blockchain-spv')
+var PeerGroupParams   = require('bitcoin-net').PeerGroup
+var BlockchainParams  = require('webcoin-bitcoin-testnet').blockchain
 
 // connect to P2P network
-var peers = new PeerGroup(some_params)
+var peers = new PeerGroup(PeerGroupParams)
 peers.connect()
 
 // create/load Blockchain
-var chain = new Blockchain(some_params, some_db)
+var some_db = levelup('bitcoin.chain', { db: require('memdown') })
+var chain = new Blockchain(BlockchainParams, some_db)
 
 chain.createLocatorStream() // locators tell us which headers to fetch
   .pipe(HeaderStream(peers)) // pipe locators into new HeaderStream
@@ -57,13 +60,16 @@ Example blockchain scan:
 var PeerGroup = require('bitcoin-net').PeerGroup
 var BlockStream = require('blockchain-download').BlockStream
 var Blockchain = require('blockchain-spv')
+var PeerGroupParams   = require('bitcoin-net').PeerGroup
+var BlockchainParams  = require('webcoin-bitcoin-testnet').blockchain
 
 // connect to P2P network
-var peers = new PeerGroup(some_params)
+var peers = new PeerGroup(PeerGroupParams)
 peers.connect()
 
 // create/load Blockchain
-var chain = new Blockchain(some_params, some_db)
+var some_db = levelup('bitcoin.chain', { db: require('memdown') })
+var chain = new Blockchain(BlockchainParams, some_db)
 
 var blocks = new BlockStream(peers)
 blocks.on('data', function (block) {
