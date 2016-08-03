@@ -22,7 +22,7 @@ Example sync:
 var PeerGroup = require('bitcoin-net').PeerGroup
 var HeaderStream = require('blockchain-download').HeaderStream
 var Blockchain = require('blockchain-spv')
-var PeerGroupParams   = require('bitcoin-net').PeerGroup
+var PeerGroupParams   = require('webcoin-bitcoin-testnet').net
 var BlockchainParams  = require('webcoin-bitcoin-testnet').blockchain
 
 // connect to P2P network
@@ -60,7 +60,7 @@ Example blockchain scan:
 var PeerGroup = require('bitcoin-net').PeerGroup
 var BlockStream = require('blockchain-download').BlockStream
 var Blockchain = require('blockchain-spv')
-var PeerGroupParams   = require('bitcoin-net').PeerGroup
+var PeerGroupParams   = require('webcoin-bitcoin-testnet').net
 var BlockchainParams  = require('webcoin-bitcoin-testnet').blockchain
 
 // connect to P2P network
