@@ -21,6 +21,7 @@ var HeaderStream = module.exports = function (peers, opts) {
   this.lastLocator = null
   this.lookAheadHash = null
   this.lookAheadHeaders = null
+  this.lookAheadPeer = null
   if (opts.endOnTip) {
     this.once('tip', () => this.end())
   }
@@ -34,6 +35,27 @@ HeaderStream.prototype._error = function (err) {
 HeaderStream.prototype._transform = function (locator, enc, cb) {
   this.lastLocator = locator
   if (this.reachedTip) return cb(null)
+  if (this.lookAheadHeaders &&
+  this.lookAheadHeaders[0].getHash().equals(locator[0])) {
+    // we already looked up next blocks, return them to handler
+    var headers = this.lookAheadHeaders
+    this.lookAheadHeaders = null
+    this._onHeaders(headers, this.lookAheadPeer, cb)
+    return
+  }
+  if (this.lookAheadHash) {
+    // inflight lookahead request
+    if (this.lookAheadHash.equals(locator[0])) {
+      // previous request was validated, inflight request is correct
+      this.once(`lookahead:${this.lookAheadHash.toString('base64')}`, (headers, peer) => {
+        this._onHeaders(headers, peer, cb)
+      })
+      return
+    } else {
+      // previous blocks were invalid, lookahead should be ignored
+      this.lookAheadHash = null
+    }
+  }
   this._getHeaders(locator, (err, headers, peer) => {
     if (err) return this._error(err)
     this._onHeaders(headers, peer, cb)
@@ -68,9 +90,19 @@ HeaderStream.prototype._onHeaders = function (headers, peer, cb) {
     if (cb) cb(null)
     return
   }
-  if (this.stop &&
-  headers[headers.length - 1].getHash().compare(this.stop) === 0) {
+  var lastHash = headers[headers.length - 1].getHash()
+  if (this.stop && lastHash.compare(this.stop) === 0) {
     this.end()
+  }
+  if (this.lookAhead) {
+    this.lookAheadHash = lastHash
+    this._getHeaders([ lastHash ], (err, headers, peer) => {
+      this.lookAheadHash = null
+      if (err) return this._error(err)
+      this.lookAheadHeaders = headers
+      this.lookAheadPeer = peer
+      this.emit(`lookahead:${lastHash.toString('base64')}`, headers, peer)
+    })
   }
   if (cb) cb(null)
 }
