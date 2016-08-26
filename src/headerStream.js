@@ -36,7 +36,7 @@ HeaderStream.prototype._transform = function (locator, enc, cb) {
   this.lastLocator = locator
   if (this.reachedTip) return cb(null)
   if (this.lookAheadHeaders &&
-  this.lookAheadHeaders[0].getHash().equals(locator[0])) {
+  this.lookAheadHeaders[0].prevHash.equals(locator[0])) {
     // we already looked up next blocks, return them to handler
     var headers = this.lookAheadHeaders
     this.lookAheadHeaders = null
@@ -77,7 +77,6 @@ HeaderStream.prototype._getHeaders = function (locator, peer, cb) {
 
 HeaderStream.prototype._onHeaders = function (headers, peer, cb) {
   if (this.done) return cb(null)
-  this.getting = false
   if (headers.length === 0) {
     this._onTip(peer)
     if (cb) cb(null)
