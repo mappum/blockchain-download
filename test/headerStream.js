@@ -275,3 +275,187 @@ test('getHeaders error', function (t) {
     hs.write([ genesis.header.getHash() ])
   })
 })
+
+test('lookahead', function (t) {
+  t.test('finish lookahead request before validating blocks', function (t) {
+    var peer = new MockPeer()
+    var hs = new HeaderStream(peer)
+    var blocks = []
+    var block
+    var genesis = createBlock()
+    for (var i = 0; i < 4000; i++) {
+      block = createBlock(block || genesis)
+      blocks.push(block)
+    }
+
+    peer.once('getHeaders', function (locator, opts, cb) {
+      t.pass('initial getHeaders request')
+      t.deepEqual(locator, [ genesis.header.getHash() ],
+        'locator is correct')
+
+      peer.once('getHeaders', function (locator, opts, cb) {
+        t.pass('lookahead locator was requested')
+        t.deepEqual(locator, [ blocks[1999].header.getHash() ],
+          'locator is correct')
+        hs.once('data', function (data) {
+          t.pass('second batch of headers emitted')
+          t.end()
+        })
+        cb(null, blocks.slice(2000, 4000).map(function (block) {
+          return block.header
+        }), peer)
+        setTimeout(function () {
+          hs.write([ blocks[1999].header.getHash() ])
+        }, 1000)
+      })
+
+      hs.once('data', function (data) {
+        t.pass('first batch of headers emitted')
+      })
+      cb(null, blocks.slice(0, 2000).map(function (block) {
+        return block.header
+      }), peer)
+    })
+
+    hs.write([ genesis.header.getHash() ])
+  })
+
+  t.test('lookahead with invalid first response', function (t) {
+    var peer = new MockPeer()
+    var hs = new HeaderStream(peer)
+    var blocks = []
+    var block
+    var genesis = createBlock()
+    for (var i = 0; i < 4000; i++) {
+      block = createBlock(block || genesis)
+      blocks.push(block)
+    }
+
+    peer.once('getHeaders', function (locator, opts, cb) {
+      t.pass('initial getHeaders request')
+      t.deepEqual(locator, [ genesis.header.getHash() ],
+        'locator is correct')
+
+      peer.once('getHeaders', function (locator, opts, cb) {
+        t.pass('lookahead locator was requested')
+        t.deepEqual(locator, [ blocks[1999].header.getHash() ],
+          'locator is correct')
+        hs.once('data', function (data) {
+          t.fail('lookahead headers emitted')
+        })
+        peer.once('getHeaders', function (locator, opts, cb) {
+          t.pass('retry getHeaders request')
+          t.deepEqual(locator, [ genesis.header.getHash() ],
+            'locator is correct')
+          t.end()
+        })
+        cb(null, blocks.slice(2000, 4000).map(function (block) {
+          return block.header
+        }), peer)
+        setTimeout(function () {
+          hs.write([ genesis.header.getHash() ])
+        }, 1000)
+      })
+
+      hs.once('data', function (data) {
+        t.pass('first batch of headers emitted')
+      })
+      cb(null, blocks.slice(0, 2000).map(function (block) {
+        return block.header
+      }), peer)
+    })
+
+    hs.write([ genesis.header.getHash() ])
+  })
+
+  t.test('lookahead response after validation', function (t) {
+    var peer = new MockPeer()
+    var hs = new HeaderStream(peer)
+    var blocks = []
+    var block
+    var genesis = createBlock()
+    for (var i = 0; i < 4000; i++) {
+      block = createBlock(block || genesis)
+      blocks.push(block)
+    }
+
+    peer.once('getHeaders', function (locator, opts, cb) {
+      t.pass('initial getHeaders request')
+      t.deepEqual(locator, [ genesis.header.getHash() ],
+        'locator is correct')
+
+      peer.once('getHeaders', function (locator, opts, cb) {
+        t.pass('lookahead locator was requested')
+        t.deepEqual(locator, [ blocks[1999].header.getHash() ],
+          'locator is correct')
+        hs.once('data', function (data) {
+          t.pass('second batch of headers emitted')
+          t.end()
+        })
+        hs.write([ blocks[1999].header.getHash() ])
+        setImmediate(function () {
+          cb(null, blocks.slice(2000, 4000).map(function (block) {
+            return block.header
+          }), peer)
+        }, 1000)
+      })
+
+      hs.once('data', function (data) {
+        t.pass('first batch of headers emitted')
+      })
+      cb(null, blocks.slice(0, 2000).map(function (block) {
+        return block.header
+      }), peer)
+    })
+
+    hs.write([ genesis.header.getHash() ])
+  })
+
+  t.test('lookahead response after invalid validation', function (t) {
+    var peer = new MockPeer()
+    var hs = new HeaderStream(peer)
+    var blocks = []
+    var block
+    var genesis = createBlock()
+    for (var i = 0; i < 4000; i++) {
+      block = createBlock(block || genesis)
+      blocks.push(block)
+    }
+
+    peer.once('getHeaders', function (locator, opts, cb) {
+      t.pass('initial getHeaders request')
+      t.deepEqual(locator, [ genesis.header.getHash() ],
+        'locator is correct')
+
+      peer.once('getHeaders', function (locator, opts, cb) {
+        t.pass('lookahead locator was requested')
+        t.deepEqual(locator, [ blocks[1999].header.getHash() ],
+          'locator is correct')
+        hs.once('data', function (data) {
+          t.fail('lookahead headers emitted')
+        })
+        peer.once('getHeaders', function (locator, opts, cb) {
+          t.pass('retry getHeaders request')
+          t.deepEqual(locator, [ genesis.header.getHash() ],
+            'locator is correct')
+          t.end()
+        })
+        hs.write([ genesis.header.getHash() ])
+        setImmediate(function () {
+          cb(null, blocks.slice(2000, 4000).map(function (block) {
+            return block.header
+          }), peer)
+        }, 1000)
+      })
+
+      hs.once('data', function (data) {
+        t.pass('first batch of headers emitted')
+      })
+      cb(null, blocks.slice(0, 2000).map(function (block) {
+        return block.header
+      }), peer)
+    })
+
+    hs.write([ genesis.header.getHash() ])
+  })
+})
