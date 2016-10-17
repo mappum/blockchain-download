@@ -19,6 +19,7 @@ var HeaderStream = module.exports = function (peers, opts) {
   this.done = false
   this.reachedTip = false
   this.lastLocator = null
+  this.lastHash = null
   this.lookAheadHash = null
   this.lookAheadHeaders = null
   this.lookAheadPeer = null
@@ -84,13 +85,13 @@ HeaderStream.prototype._onHeaders = function (headers, peer, cb) {
   }
   headers.peer = peer
   this.push(headers)
+  var lastHash = this.lastHash = headers[headers.length - 1].getHash()
   if (headers.length < 2000) {
     this._onTip(peer)
     if (cb) cb(null)
     return
   }
-  var lastHash = headers[headers.length - 1].getHash()
-  if (this.stop && lastHash.compare(this.stop) === 0) {
+  if (this.stop && this.lastHash.equals(this.stop)) {
     this.end()
   }
   if (this.lookAhead) {
