@@ -11,7 +11,7 @@ var BlockStream = module.exports = function (peers, opts) {
   if (!peers) throw new Error('"peers" argument is required for BlockStream')
   Transform.call(this, { objectMode: true })
 
-  debug(`created BlockStream: ${JSON.stringify(opts, null, '  ')}`)
+  debug('created BlockStream')
 
   opts = opts || {}
   this.peers = peers
