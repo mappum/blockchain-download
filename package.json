@@ -25,11 +25,13 @@
   "dependencies": {
     "bitcoin-inventory": "^1.0.2",
     "bitcoin-merkle-proof": "0.0.6",
+    "bitcoin-net": "^5.0.0",
     "bitcoin-protocol": "^3.0.1",
     "debug": "^2.2.0",
     "event-cleanup": "^1.0.3",
     "object-assign": "^4.1.0",
-    "through2": "^2.0.1"
+    "through2": "^2.0.1",
+    "webcoin-bitcoin": "^3.1.4"
   },
   "devDependencies": {
     "babel-cli": "^6.9.0",
