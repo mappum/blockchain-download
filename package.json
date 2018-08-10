@@ -27,6 +27,7 @@
     "bitcoin-merkle-proof": "0.0.6",
     "bitcoin-net": "^5.0.0",
     "bitcoin-protocol": "^3.0.1",
+    "blockchain-spv": "^3.1.6",
     "debug": "^2.2.0",
     "event-cleanup": "^1.0.3",
     "object-assign": "^4.1.0",
