@@ -44,7 +44,7 @@ module.exports = async function (chain, peers) {
         Object.assign(header, { height: height + i }))
 
       // verify and add to chain
-      chain.add(...headers)
+      chain.add(headers)
 
       // less than 2000 headers, we reached the tip
       // TODO: time heuristic
