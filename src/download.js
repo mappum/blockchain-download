@@ -1,4 +1,6 @@
-let { getHash } = require('blockchain-spv')
+'use strict'
+
+const { getHash } = require('blockchain-spv')
 
 function getLocator (chain) {
   let locator = []
@@ -49,7 +51,6 @@ module.exports = async function (chain, peers) {
       // less than 2000 headers, we reached the tip
       // TODO: time heuristic
       if (headers.length < 2000) break
-
     } catch (err) {
       // verification failed, disconnect peer
       res.peer.disconnect(err)

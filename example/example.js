@@ -9,15 +9,7 @@ let peers = PeerGroup(params.net)
 // Blockchain verifies block headers
 let chain = Blockchain({
   indexed: true,
-  start: {
-    height: 0,
-    version: 1,
-    prevHash: Buffer(32),
-    merkleRoot: Buffer.from('4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b', 'hex').reverse(),
-    timestamp: 1231006505,
-    bits: 0x1d00ffff,
-    nonce: 2083236893
-  }
+  start: params.blockchain.genesisHeader
 })
 
 // start connecting to bitcoin nodes
