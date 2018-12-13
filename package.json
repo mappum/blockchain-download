@@ -1,6 +1,6 @@
 {
   "name": "blockchain-download",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Streams for downloading blockchain data from peers",
   "main": "index.js",
   "scripts": {
