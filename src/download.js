@@ -12,14 +12,17 @@ function getLocator (chain) {
   return locator
 }
 
-module.exports = async function (chain, peers) {
+module.exports = async function (chain, peers, opts = {}) {
+  opts.concurrency = opts.concurrency || 3
+
   while (true) {
     // fetch headers
     let locator = getLocator(chain)
     let res = await new Promise((resolve, reject) => {
       // request from multiple peers, uses more bandiwdth but is faster
       // only the fastest response resolves
-      for (let i = 0; i < 3; i++) {
+      let concurrency = Math.min(opts.concurrency, peers.peers.length)
+      for (let i = 0; i < concurrency; i++) {
         peers.getHeaders(locator, (err, headers, peer) => {
           if (err) return reject(err)
           resolve({ headers, peer })
@@ -35,8 +38,11 @@ module.exports = async function (chain, peers) {
       }
 
       // make sure headers connect to chain
-      let connectsTo = chain.getByHash(res.headers[0].header.prevHash)
-      if (!connectsTo) {
+      let connectsTo
+      try {
+        connectsTo = chain.getByHash(res.headers[0].header.prevHash)
+      } catch (err) {
+        console.log(res.headers[0].header)
         throw Error('Headers do not connect to chain')
       }
 
