@@ -42,7 +42,6 @@ module.exports = async function (chain, peers, opts = {}) {
       try {
         connectsTo = chain.getByHash(res.headers[0].header.prevHash)
       } catch (err) {
-        console.log(res.headers[0].header)
         throw Error('Headers do not connect to chain')
       }
 
